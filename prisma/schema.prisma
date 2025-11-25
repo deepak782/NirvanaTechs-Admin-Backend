@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(EXECUTIVE)
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  EXECUTIVE
+}
+
+enum LeadBudget {
+  LT_1_LAKH      // < 1 lakh
+  BETWEEN_1_3L   // 1–3 lakhs
+  GT_3_LAKH      // > 3 lakhs
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUOTATION_SENT
+  CLOSED
+  LOST
+}
+
+enum FollowupStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  NOT_INTERESTED
+}
+
+enum QuotationStatus {
+  DRAFT
+  SENT
+  APPROVED
+}
+
+model Lead {
+  id             String            @id @default(uuid())
+  name           String
+  mobile         String            @db.VarChar(20)
+  email          String?           @db.VarChar(255)
+  whatsapp       String?           @db.VarChar(20)
+  technology     String
+  receivedDate   DateTime
+  leadSource     String
+  followupStatus FollowupStatus
+  followupDate   DateTime?
+  budget         LeadBudget
+  leadStatus     LeadStatus
+  description    String?
+
+  quotations     Quotation[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([mobile])
+}
+
+model Quotation {
+  id        String           @id @default(uuid())
+  refNo     String           @unique
+  subject   String
+  pdfUrl    String?
+  status    QuotationStatus  @default(DRAFT)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  leadId    String
+  lead      Lead             @relation(fields: [leadId], references: [id])
+}

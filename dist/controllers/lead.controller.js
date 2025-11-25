@@ -1,0 +1,181 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.getLeadByMobile = exports.deleteLead = exports.updateLead = exports.getLeadById = exports.getLeadsGrouped = exports.getLeads = exports.createLead = void 0;
+const prisma_1 = __importDefault(require("../utils/prisma"));
+const createLead = async (req, res, next) => {
+    try {
+        const { name, mobile, email, whatsapp, technology, receivedDate, leadSource, followupStatus, followupDate, budget, leadStatus, description } = req.body;
+        // Fetch existing client by mobile
+        const existingLeads = await prisma_1.default.lead.findMany({
+            where: { mobile },
+            orderBy: { createdAt: "desc" }
+        });
+        let finalName = name;
+        let finalEmail = email;
+        let finalWhatsapp = whatsapp || mobile;
+        if (existingLeads.length > 0) {
+            // Use existing client details
+            const prev = existingLeads[0];
+            finalName = prev.name;
+            finalEmail = prev.email ?? email;
+            finalWhatsapp = prev.whatsapp ?? whatsapp ?? mobile;
+        }
+        const lead = await prisma_1.default.lead.create({
+            data: {
+                name: finalName,
+                mobile,
+                email: finalEmail,
+                whatsapp: finalWhatsapp,
+                technology,
+                receivedDate: new Date(receivedDate),
+                leadSource,
+                followupStatus,
+                followupDate: followupDate ? new Date(followupDate) : null,
+                budget,
+                leadStatus,
+                description
+            }
+        });
+        return res.status(201).json({
+            success: true,
+            lead,
+            isNewClient: existingLeads.length === 0,
+            message: existingLeads.length === 0
+                ? "New client created with first requirement"
+                : "Existing client: new requirement added"
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.createLead = createLead;
+const getLeads = async (req, res, next) => {
+    try {
+        const leads = await prisma_1.default.lead.findMany({
+            orderBy: { createdAt: "desc" }
+        });
+        res.json({
+            success: true,
+            leads
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getLeads = getLeads;
+const getLeadsGrouped = async (req, res, next) => {
+    try {
+        const leads = await prisma_1.default.lead.findMany({
+            orderBy: { createdAt: "desc" }
+        });
+        const grouped = leads.reduce((acc, row) => {
+            if (!acc[row.mobile]) {
+                acc[row.mobile] = {
+                    client: {
+                        name: row.name,
+                        mobile: row.mobile,
+                        email: row.email,
+                        whatsapp: row.whatsapp
+                    },
+                    requirements: []
+                };
+            }
+            acc[row.mobile].requirements.push(row);
+            return acc;
+        }, {});
+        res.json({
+            success: true,
+            grouped
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getLeadsGrouped = getLeadsGrouped;
+const getLeadById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const lead = await prisma_1.default.lead.findUnique({
+            where: { id },
+            include: { quotations: true },
+        });
+        if (!lead) {
+            return res.status(404).json({ success: false, message: 'Lead not found' });
+        }
+        res.json({ success: true, lead });
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.getLeadById = getLeadById;
+const updateLead = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const data = req.body;
+        const updated = await prisma_1.default.lead.update({
+            where: { id },
+            data: {
+                technology: data.technology,
+                receivedDate: data.receivedDate ? new Date(data.receivedDate) : undefined,
+                leadSource: data.leadSource,
+                followupStatus: data.followupStatus,
+                followupDate: data.followupDate ? new Date(data.followupDate) : undefined,
+                budget: data.budget,
+                leadStatus: data.leadStatus,
+                description: data.description
+            }
+        });
+        return res.json({ success: true, updated });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.updateLead = updateLead;
+const deleteLead = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await prisma_1.default.lead.delete({ where: { id } });
+        return res.json({ success: true, message: "Requirement deleted successfully" });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.deleteLead = deleteLead;
+// 🔍 For quotation popup: get lead by mobile number
+const getLeadByMobile = async (req, res, next) => {
+    try {
+        const { mobile } = req.params;
+        const leads = await prisma_1.default.lead.findMany({
+            where: { mobile },
+            orderBy: { createdAt: "desc" },
+        });
+        // No existing client
+        if (leads.length === 0) {
+            return res.json({
+                exists: false,
+                client: null,
+                requirements: []
+            });
+        }
+        // Extract client details from first entry
+        const { name, email, whatsapp } = leads[0];
+        return res.json({
+            exists: true,
+            client: { name, mobile, email, whatsapp },
+            requirements: leads
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getLeadByMobile = getLeadByMobile;
