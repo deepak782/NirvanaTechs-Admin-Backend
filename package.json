@@ -10,7 +10,7 @@
     "migrate": "npx prisma migrate deploy",
     "migrate-and-start": "npm run migrate && npm start"
   },
-   "prisma": {
+  "prisma": {
     "seed": "ts-node prisma/seed.ts"
   },
   "keywords": [],
@@ -30,17 +30,13 @@
     "puppeteer": "^24.30.0"
   },
   "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.5",
-    "@types/fs-extra": "^11.0.4",
-    "@types/jsonwebtoken": "^9.0.10",
-    "@types/multer": "^2.0.0",
-    "@types/node": "^24.10.1",
-    "@types/nodemailer": "^7.0.4",
-    "prisma": "^6.19.0",
-    "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "typescript": "^5.9.3"
-  }
+  "@types/node": "^20.11.30",
+  "@types/express": "^4.17.21",
+  "@types/cors": "^2.8.17",
+  "@types/jsonwebtoken": "^9.0.2",
+  "@types/bcrypt": "^5.0.0",
+  "@types/multer": "^1.4.7",
+  "typescript": "^5.3.3",
+  "ts-node": "^10.9.2"
+}
 }

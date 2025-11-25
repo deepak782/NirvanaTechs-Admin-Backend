@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.authMiddleware = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const authMiddleware = (req, res, next) => {
-    const header = req.headers.authorization;
+    const header = req.headers["authorization"];
     if (!header)
         return res.status(401).json({ message: "Missing token" });
     const token = header.split(" ")[1];
