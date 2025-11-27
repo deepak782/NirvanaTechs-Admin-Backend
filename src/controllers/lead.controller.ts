@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import prisma from "../utils/prisma";
 import { FollowupStatus, LeadStatus, LeadBudget, QuotationStatus } from "@prisma/client";
-import { sendEmail } from "../utils/email";
+
 
 
 export const createLead = async (req: Request, res: Response, next: NextFunction) => {
@@ -207,51 +207,5 @@ export const getLeadByMobile = async (req: Request, res: Response, next: NextFun
 
   } catch (error) {
     next(error);
-  }
-};
-
-
-export const sendLeadEmail = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const { subject, message } = req.body;
-
-    if (!subject || !message) {
-      return res
-        .status(400)
-        .json({ message: "Subject and message are required" });
-    }
-
-    // Get lead from DB
-    const lead = await prisma.lead.findUnique({
-      where: { id },
-    });
-
-    if (!lead) {
-      return res.status(404).json({ message: "Lead not found" });
-    }
-
-    if (!lead.email) {
-      return res
-        .status(400)
-        .json({ message: "This lead does not have an email" });
-    }
-
-    // Send email
-    await sendEmail({
-      to: lead.email,
-      subject,
-      html: `<p>${message}</p>`,
-    });
-
-    res.json({
-      success: true,
-      message: "Email sent successfully",
-    });
-  } catch (error) {
-    console.error("Email error:", error);
-    res
-      .status(500)
-      .json({ message: "Failed to send email", error: (error as any).message });
   }
 };
