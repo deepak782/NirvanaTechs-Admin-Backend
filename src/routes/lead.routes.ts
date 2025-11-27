@@ -5,10 +5,12 @@ import {
   getLeadById,          // get a single requirement
   updateLead,           // update requirement
   deleteLead,           // delete requirement
-  getLeadByMobile       // fetch client + existing requirements
+  getLeadByMobile,       // fetch client + existing requirements
+  sendLeadEmail
 } from "../controllers/lead.controller";
 
 import { authMiddleware } from "../middleware/auth";
+
 
 const router = Router();
 
@@ -29,5 +31,7 @@ router.put("/:id", authMiddleware, updateLead);
 
 // ➤ delete requirement
 router.delete("/:id", authMiddleware, deleteLead);
+
+router.post("/:id/send-email", sendLeadEmail);
 
 export default router;

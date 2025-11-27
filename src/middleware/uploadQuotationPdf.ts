@@ -1,55 +1,26 @@
-import multer, { FileFilterCallback } from "multer";
-import path from "path";
-import fs from "fs";
-import type { Request } from "express";
+import multer from "multer";
 
 /**
- * FIX 1: Use path.resolve() → works in both local & Render
+ * Memory storage → required for Cloudflare R2
  */
-const uploadDir = path.resolve("uploads/quotations");
+const storage = multer.memoryStorage();
 
 /**
- * FIX 2: Ensure folder exists (safe for Render)
+ * Validate only PDF files
  */
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir, { recursive: true });
-}
+const fileFilter: multer.Options["fileFilter"] = (req, file, cb) => {
+  if (file.mimetype !== "application/pdf") {
+    return cb(new Error("Only PDF files are allowed"));
+  }
+  cb(null, true);
+};
 
 /**
- * FIX 3: Explicit typing for multer callbacks → removes TS7006 errors
- */
-const storage = multer.diskStorage({
-  destination: (
-    req: Request,
-    file: Express.Multer.File,
-    cb: (error: Error | null, destination: string) => void
-  ) => {
-    cb(null, uploadDir);
-  },
-
-  filename: (
-    req: Request,
-    file: Express.Multer.File,
-    cb: (error: Error | null, filename: string) => void
-  ) => {
-    const timestamp = Date.now();
-    const ext = path.extname(file.originalname) || ".pdf";
-
-    // safer name (remove illegal chars)
-    const safeName = file.originalname
-      .toLowerCase()
-      .replace(/[^a-z0-9]/g, "-")
-      .replace(/-+/g, "-");
-
-    cb(null, `quotation-${timestamp}${ext}`);
-  },
-});
-
-/**
- * FIX 4: Properly typed multer export
+ * Export Multer upload middleware
  */
 export const uploadQuotationPdf = multer({
   storage,
+  fileFilter,
   limits: {
     fileSize: 10 * 1024 * 1024, // 10 MB
   },
