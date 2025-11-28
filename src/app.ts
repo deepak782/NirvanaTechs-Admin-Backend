@@ -5,6 +5,9 @@ import path from "path";
 import authRoutes from "./routes/auth.routes";
 import leadsRoutes from "./routes/lead.routes";
 import quotationsRoutes from "./routes/quotation.routes";
+import followupRoutes from "./routes/followup.routes";
+import projectRoutes from "./routes/project.routes";
+import paymentRoutes from "./routes/payment.routes";
 
 import { notFound } from "./middleware/notFound";
 import { errorHandler } from "./middleware/errorHandler";
@@ -26,6 +29,9 @@ app.use("/api/auth", authRoutes);
 // Protected routes
 app.use("/api/leads", leadsRoutes);
 app.use("/api/quotations", quotationsRoutes);
+app.use("/api/followups", followupRoutes);
+app.use("/api/projects", projectRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // Errors
 app.use(notFound);

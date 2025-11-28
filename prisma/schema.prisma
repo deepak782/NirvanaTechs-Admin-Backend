@@ -23,9 +23,9 @@ enum Role {
 }
 
 enum LeadBudget {
-  LT_1_LAKH      // < 1 lakh
-  BETWEEN_1_3L   // 1–3 lakhs
-  GT_3_LAKH      // > 3 lakhs
+  LT_1_LAKH // < 1 lakh
+  BETWEEN_1_3L // 1–3 lakhs
+  GT_3_LAKH // > 3 lakhs
 }
 
 enum LeadStatus {
@@ -49,12 +49,35 @@ enum QuotationStatus {
   APPROVED
 }
 
+enum ProjectStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PAID
+  PENDING
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  BANK_TRANSFER
+  CARD
+  OTHER
+}
+
 model Lead {
-  id             String            @id @default(uuid())
+  id             String         @id @default(uuid())
   name           String
-  mobile         String            @db.VarChar(20)
-  email          String?           @db.VarChar(255)
-  whatsapp       String?           @db.VarChar(20)
+  mobile         String         @db.VarChar(20)
+  email          String?        @db.VarChar(255)
+  whatsapp       String?        @db.VarChar(20)
   technology     String
   receivedDate   DateTime
   leadSource     String
@@ -64,22 +87,71 @@ model Lead {
   leadStatus     LeadStatus
   description    String?
 
-  quotations     Quotation[]
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  quotations Quotation[]
+  followups  FollowUp[]
+  projects   Project[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([mobile])
 }
 
 model Quotation {
-  id        String           @id @default(uuid())
-  refNo     String           @unique
+  id        String          @id @default(uuid())
+  refNo     String          @unique
   subject   String
   pdfUrl    String?
-  status    QuotationStatus  @default(DRAFT)
-  createdAt DateTime         @default(now())
-  updatedAt DateTime         @updatedAt
+  status    QuotationStatus @default(DRAFT)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
 
-  leadId    String
-  lead      Lead             @relation(fields: [leadId], references: [id])
+  leadId String
+  lead   Lead   @relation(fields: [leadId], references: [id])
+}
+
+model FollowUp {
+  id               Int            @id @default(autoincrement())
+  leadId           String
+  followupDate     DateTime
+  status           FollowupStatus
+  notes            String?
+  nextFollowupDate DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  lead Lead @relation(fields: [leadId], references: [id])
+
+  @@unique([leadId, followupDate])
+}
+
+model Project {
+  id          Int           @id @default(autoincrement())
+  name        String
+  leadId      String
+  startDate   DateTime?
+  endDate     DateTime?
+  status      ProjectStatus @default(NOT_STARTED)
+  totalAmount Float         @default(0)
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  lead     Lead      @relation(fields: [leadId], references: [id])
+  payments Payment[]
+}
+
+model Payment {
+  id        Int           @id @default(autoincrement())
+  projectId Int
+  date      DateTime
+  amount    Float
+  method    PaymentMethod
+  status    PaymentStatus @default(PAID)
+  reference String?
+  notes     String?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id])
 }
